@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epstein Files: Scientists & Consciousness Researchers — Relationship Graph</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    color: #c8ccd0;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, rgba(10,10,15,0.97) 0%, rgba(10,10,15,0.85) 100%);
+    border-bottom: 1px solid rgba(200,80,80,0.2);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(12px);
+  }
+
+  #header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e0e0e0;
+    letter-spacing: 0.5px;
+  }
+
+  #header h1 span {
+    color: #c04040;
+  }
+
+  #header .subtitle {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  #legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  #graph-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Detail Panel */
+  #detail-panel {
+    position: fixed;
+    top: 60px;
+    right: -480px;
+    width: 460px;
+    height: calc(100vh - 60px);
+    background: rgba(12, 12, 18, 0.97);
+    border-left: 1px solid rgba(200, 80, 80, 0.2);
+    backdrop-filter: blur(16px);
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  #detail-panel.open {
+    right: 0;
+  }
+
+  #detail-panel::-webkit-scrollbar {
+    width: 4px;
+  }
+  #detail-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #detail-panel::-webkit-scrollbar-thumb {
+    background: rgba(200,80,80,0.3);
+    border-radius: 2px;
+  }
+
+  .panel-header {
+    position: sticky;
+    top: 0;
+    background: rgba(12, 12, 18, 0.98);
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid rgba(200,80,80,0.15);
+    z-index: 10;
+  }
+
+  .panel-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(200,80,80,0.3);
+    background: transparent;
+    color: #888;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .panel-close:hover {
+    background: rgba(200,80,80,0.15);
+    color: #c04040;
+    border-color: rgba(200,80,80,0.5);
+  }
+
+  .panel-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    padding-right: 40px;
+  }
+
+  .panel-role {
+    font-size: 12px;
+    color: #c04040;
+    line-height: 1.4;
+  }
+
+  .panel-body {
+    padding: 20px 24px 32px;
+  }
+
+  .detail-section {
+    margin-bottom: 20px;
+  }
+
+  .detail-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .detail-value {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #bbb;
+  }
+
+  .detail-value.status {
+    color: #e8a040;
+  }
+
+  .connection-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .connection-list li {
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    background: rgba(200,80,80,0.06);
+    border: 1px solid rgba(200,80,80,0.1);
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .connection-list li:hover {
+    background: rgba(200,80,80,0.12);
+    border-color: rgba(200,80,80,0.25);
+  }
+
+  .connection-list li .conn-name {
+    color: #ddd;
+    font-weight: 600;
+  }
+
+  .connection-list li .conn-via {
+    color: #777;
+    font-size: 11px;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(12,12,18,0.95);
+    border: 1px solid rgba(200,80,80,0.3);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #ddd;
+    backdrop-filter: blur(8px);
+    z-index: 300;
+    max-width: 240px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tooltip.visible {
+    opacity: 1;
+  }
+
+  .tooltip .tt-name {
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .tooltip .tt-role {
+    color: #999;
+    font-size: 11px;
+  }
+
+  /* Edge labels */
+  .edge-label {
+    font-size: 9px;
+    fill: #555;
+    pointer-events: none;
+  }
+
+  /* Glow filter for selected */
+  .node-glow {
+    filter: url(#glow);
+  }
+
+  /* Instructions overlay */
+  #instructions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(12,12,18,0.85);
+    border: 1px solid rgba(200,80,80,0.15);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #555;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    transition: opacity 0.5s;
+  }
+
+  #instructions span {
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>Epstein Files: <span>Scientists & Consciousness Researchers</span></h1>
+    <div class="subtitle">Resignations, Consequences & Connections — DOJ Release Jan 2026</div>
+  </div>
+  <div id="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#c04040"></div> Resigned / Left</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8a040"></div> Under Investigation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6080c0"></div> Other Consequences</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#404060"></div> Institution</div>
+  </div>
+</div>
+
+<div id="graph-container">
+  <svg id="graph"></svg>
+</div>
+
+<div id="detail-panel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">&times;</button>
+    <div class="panel-name" id="panel-name"></div>
+    <div class="panel-role" id="panel-role"></div>
+  </div>
+  <div class="panel-body">
+    <div class="detail-section">
+      <div class="detail-label">Affiliation</div>
+      <div class="detail-value" id="panel-affiliation"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Appearance in Epstein Files</div>
+      <div class="detail-value" id="panel-appearance"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Status / Consequence</div>
+      <div class="detail-value status" id="panel-status"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Connections</div>
+      <ul class="connection-list" id="panel-connections"></ul>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-name"></div>
+  <div class="tt-role"></div>
+</div>
+
+<div id="instructions">
+  <span>Click</span> a node for details &middot; <span>Drag</span> to reposition &middot; <span>Scroll</span> to zoom &middot; <span>Click</span> background to deselect
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+// ─── Data ────────────────────────────────────────────────────────────
+
+const people = [
+  {
+    id: "axel",
+    name: "Richard Axel",
+    role: "Nobel Laureate; Co-Director, Zuckerman Mind Brain Behavior Institute; HHMI Investigator",
+    affiliation: "Columbia University / Howard Hughes Medical Institute",
+    appearance: "Named 933 times in DOJ files. Longstanding personal friendship with Epstein spanning years of correspondence and meetings.",
+    status: "Resigned as co-director of Zuckerman Institute and as HHMI Investigator (Feb 2026). Continues as professor.",
+    category: "resigned",
+    mentions: 933,
+    fields: ["neuroscience", "consciousness"]
+  },
+  {
+    id: "hameroff",
+    name: "Stuart Hameroff",
+    role: "Director, Center for Consciousness Studies; Professor of Anesthesiology",
+    affiliation: "University of Arizona",
+    appearance: "Obtained $50,000 from Epstein's foundation (Gratitude America Ltd.) for The Science of Consciousness conference in San Diego (2017). Stayed at Epstein's NYC apartment in 2016. 2016 email chain shows meetings with Epstein in New York.",
+    status: "April 2026 Science of Consciousness conference cancelled. Hameroff publicly apologized to Epstein survivors and colleagues.",
+    category: "consequences",
+    mentions: 50,
+    fields: ["consciousness", "neuroscience"]
+  },
+  {
+    id: "summers",
+    name: "Larry Summers",
+    role: "Professor; Former Harvard President; Former U.S. Treasury Secretary",
+    affiliation: "Harvard University / OpenAI Board",
+    appearance: "Repeat presence in Epstein files. Extensive email correspondence with Epstein spanning years. Files revealed deeper ties than previously disclosed.",
+    status: "Resigned from OpenAI board (Nov 2025). On leave from Harvard since Nov 2025. Announced full resignation from Harvard professorship effective end of academic year (Feb 2026).",
+    category: "resigned",
+    mentions: 200,
+    fields: ["economics", "policy", "AI"]
+  },
+  {
+    id: "smolin",
+    name: "Lee Smolin",
+    role: "Professor of Physics; Founding Faculty Member",
+    affiliation: "Perimeter Institute for Theoretical Physics, University of Waterloo",
+    appearance: "Named 182 times in DOJ files. Previously claimed no contact with Epstein after 2008, but files revealed contact as recently as 2013.",
+    status: "Agreed to \u201cpause his working relationship\u201d with Perimeter Institute (Feb 2026).",
+    category: "resigned",
+    mentions: 182,
+    fields: ["physics", "consciousness"]
+  },
+  {
+    id: "bach",
+    name: "Joscha Bach",
+    role: "Cognitive Scientist / AI Researcher",
+    affiliation: "MIT Media Lab",
+    appearance: "Epstein subsidized his MIT Media Lab hiring with $300,000 in donations (2013\u20132014). Epstein also covered Bach\u2019s rent, flights, medical bills, and children\u2019s private school tuition (2013\u20132019). Controversial emails revealed where Bach made claims about race and cognitive development.",
+    status: "Lost advisory positions, had presentations and talks cancelled. Business partners severed ties. Reported receiving threats. Not formally \u201cresigned\u201d but suffered significant professional consequences.",
+    category: "consequences",
+    mentions: 100,
+    fields: ["AI", "consciousness", "cognitive science"]
+  },
+  {
+    id: "tramo",
+    name: "Mark Tramo",
+    role: "Associate Adjunct Professor of Neurology; Music, Mind & Brain researcher",
+    affiliation: "University of California, Los Angeles (UCLA)",
+    appearance: "Exchanged approximately 1,200 emails with Epstein (2010\u20132019). Epstein\u2019s foundation donated ~$100,000 to support Tramo\u2019s institute in 2017. Thanked Epstein for making his UCLA Music, Mind, and Brain course possible.",
+    status: "Profile removed from UCLA\u2019s media experts list. Petition with 10,000+ signatures calling for termination. Classes moved to remote/Zoom. Under university review.",
+    category: "investigation",
+    mentions: 1200,
+    fields: ["neuroscience", "consciousness"]
+  },
+  {
+    id: "church",
+    name: "George Church",
+    role: "Professor of Genetics",
+    affiliation: "Harvard University",
+    appearance: "Received funding from Epstein or through his associates. Co-founded an investment company with Epstein (2014). Epstein tissue samples processed in Church\u2019s lab caused internal controversy. Proposed Epstein-funded \u201cpleasure genome initiative\u201d and life extension lab.",
+    status: "Under expanded Harvard investigation. Apologized in 2019. Has not resigned as of Feb 2026.",
+    category: "investigation",
+    mentions: 300,
+    fields: ["genetics", "biology"]
+  },
+  {
+    id: "yu",
+    name: "Gino Yu",
+    role: "Associate Professor & Director, Digital Entertainment and Game Development",
+    affiliation: "Hong Kong Polytechnic University",
+    appearance: "Named over 1,000 times in files. Exchanged 548+ emails with Epstein (2015\u20132019). Arranged Hameroff\u2019s stay at Epstein\u2019s NYC apartment. Connected to consciousness research and AI projects funded by Epstein.",
+    status: "Listed as \u201cretired\u201d from PolyU. Circumstances and timing of retirement unclear; may be related to Epstein revelations.",
+    category: "consequences",
+    mentions: 1000,
+    fields: ["consciousness", "AI", "digital media"]
+  },
+  {
+    id: "nowak",
+    name: "Martin Nowak",
+    role: "Professor of Mathematics and Biology; Director, Program for Evolutionary Dynamics",
+    affiliation: "Harvard University",
+    appearance: "Deep financial relationship with Epstein. Epstein donated millions to Nowak\u2019s program. Extensive correspondence revealed in files showing ongoing relationship post-conviction.",
+    status: "Under expanded Harvard investigation. Previously faced scrutiny in 2019 Harvard review. Status as of Feb 2026 under active review.",
+    category: "investigation",
+    mentions: 400,
+    fields: ["mathematics", "biology", "evolution"]
+  }
+];
+
+// Central node
+const epstein = {
+  id: "epstein",
+  name: "Jeffrey Epstein",
+  role: "Convicted Sex Offender; Financier",
+  type: "central",
+  mentions: 0
+};
+
+// Institution nodes
+const institutions = [
+  { id: "harvard", name: "Harvard University", type: "institution" },
+  { id: "mit", name: "MIT Media Lab", type: "institution" },
+  { id: "columbia", name: "Columbia University", type: "institution" },
+  { id: "ucla", name: "UCLA", type: "institution" },
+  { id: "uarizona", name: "University of Arizona", type: "institution" },
+  { id: "perimeter", name: "Perimeter Institute", type: "institution" },
+  { id: "polyu", name: "Hong Kong PolyU", type: "institution" },
+  { id: "openai", name: "OpenAI", type: "institution" },
+  { id: "hhmi", name: "HHMI", type: "institution" }
+];
+
+// Define all relationships
+const relationships = [
+  // Epstein connections
+  { source: "epstein", target: "axel", label: "933 mentions; friendship", type: "epstein", strength: 0.9 },
+  { source: "epstein", target: "hameroff", label: "$50K funding; hosted", type: "epstein", strength: 0.5 },
+  { source: "epstein", target: "summers", label: "extensive correspondence", type: "epstein", strength: 0.8 },
+  { source: "epstein", target: "smolin", label: "182 mentions; post-2008 contact", type: "epstein", strength: 0.6 },
+  { source: "epstein", target: "bach", label: "$300K donations; personal expenses", type: "epstein", strength: 0.85 },
+  { source: "epstein", target: "tramo", label: "1,200 emails; $100K donations", type: "epstein", strength: 0.95 },
+  { source: "epstein", target: "church", label: "co-founded company; lab funding", type: "epstein", strength: 0.85 },
+  { source: "epstein", target: "yu", label: "1,000+ mentions; 548+ emails", type: "epstein", strength: 0.9 },
+  { source: "epstein", target: "nowak", label: "millions donated; deep ties", type: "epstein", strength: 0.95 },
+
+  // Institution connections
+  { source: "axel", target: "columbia", label: "faculty", type: "institution" },
+  { source: "axel", target: "hhmi", label: "investigator", type: "institution" },
+  { source: "hameroff", target: "uarizona", label: "professor", type: "institution" },
+  { source: "summers", target: "harvard", label: "professor; former president", type: "institution" },
+  { source: "summers", target: "openai", label: "board member (resigned)", type: "institution" },
+  { source: "smolin", target: "perimeter", label: "founding faculty", type: "institution" },
+  { source: "bach", target: "mit", label: "researcher", type: "institution" },
+  { source: "tramo", target: "ucla", label: "professor", type: "institution" },
+  { source: "church", target: "harvard", label: "professor", type: "institution" },
+  { source: "yu", target: "polyu", label: "director", type: "institution" },
+  { source: "nowak", target: "harvard", label: "professor; director", type: "institution" },
+
+  // Inter-person connections
+  { source: "yu", target: "hameroff", label: "arranged Epstein apartment stay", type: "interpersonal" },
+  { source: "church", target: "nowak", label: "both under Harvard investigation", type: "shared" },
+  { source: "summers", target: "nowak", label: "both Harvard; Epstein funding ties", type: "shared" },
+  { source: "summers", target: "church", label: "both Harvard; Epstein funding ties", type: "shared" },
+  { source: "hameroff", target: "bach", label: "consciousness research overlap", type: "shared" },
+  { source: "hameroff", target: "smolin", label: "consciousness & physics overlap", type: "shared" },
+  { source: "bach", target: "yu", label: "AI & consciousness overlap; Epstein funding", type: "shared" },
+  { source: "axel", target: "tramo", label: "neuroscience; heavy Epstein correspondence", type: "shared" },
+  { source: "church", target: "epstein", label: "", type: "none" }, // already defined above, skip
+];
+
+// Filter out duplicate
+const links = relationships.filter(r => r.type !== "none");
+
+// Build node array
+const nodes = [
+  epstein,
+  ...people,
+  ...institutions
+];
+
+// ─── Visualization ───────────────────────────────────────────────────
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const svg = d3.select("#graph")
+  .attr("viewBox", [0, 0, width, height]);
+
+// Defs for glow effect
+const defs = svg.append("defs");
+
+const glowFilter = defs.append("filter")
+  .attr("id", "glow")
+  .attr("x", "-50%").attr("y", "-50%")
+  .attr("width", "200%").attr("height", "200%");
+glowFilter.append("feGaussianBlur")
+  .attr("stdDeviation", "4")
+  .attr("result", "coloredBlur");
+const feMerge = glowFilter.append("feMerge");
+feMerge.append("feMergeNode").attr("in", "coloredBlur");
+feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+// Arrow markers
+defs.append("marker")
+  .attr("id", "arrow")
+  .attr("viewBox", "0 -5 10 10")
+  .attr("refX", 20)
+  .attr("refY", 0)
+  .attr("markerWidth", 6)
+  .attr("markerHeight", 6)
+  .attr("orient", "auto")
+  .append("path")
+  .attr("d", "M0,-5L10,0L0,5")
+  .attr("fill", "rgba(200,80,80,0.3)");
+
+const g = svg.append("g");
+
+// Zoom
+const zoom = d3.zoom()
+  .scaleExtent([0.2, 4])
+  .on("zoom", (event) => {
+    g.attr("transform", event.transform);
+  });
+
+svg.call(zoom);
+
+// Center initial view
+svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2 - 50, height / 2 - 30).scale(0.85));
+
+// Color helpers
+function nodeColor(d) {
+  if (d.id === "epstein") return "#c04040";
+  if (d.type === "institution") return "#404060";
+  if (d.category === "resigned") return "#c04040";
+  if (d.category === "investigation") return "#e8a040";
+  return "#6080c0";
+}
+
+function nodeRadius(d) {
+  if (d.id === "epstein") return 32;
+  if (d.type === "institution") return 14;
+  const m = d.mentions || 0;
+  return Math.max(16, Math.min(28, 14 + Math.sqrt(m) * 0.5));
+}
+
+function linkColor(d) {
+  if (d.type === "epstein") return "rgba(200,80,80,0.35)";
+  if (d.type === "institution") return "rgba(64,64,96,0.25)";
+  if (d.type === "interpersonal") return "rgba(100,200,150,0.35)";
+  return "rgba(100,140,200,0.2)";
+}
+
+function linkWidth(d) {
+  if (d.type === "epstein") return 1.5 + (d.strength || 0.5) * 2;
+  if (d.type === "interpersonal") return 1.8;
+  return 0.8;
+}
+
+// Simulation
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+    if (d.type === "epstein") return 180 + (1 - (d.strength || 0.5)) * 80;
+    if (d.type === "institution") return 100;
+    return 220;
+  }).strength(d => {
+    if (d.type === "epstein") return 0.6;
+    if (d.type === "institution") return 0.4;
+    return 0.15;
+  }))
+  .force("charge", d3.forceManyBody()
+    .strength(d => {
+      if (d.id === "epstein") return -800;
+      if (d.type === "institution") return -150;
+      return -400;
+    }))
+  .force("center", d3.forceCenter(0, 0))
+  .force("collision", d3.forceCollide().radius(d => nodeRadius(d) + 8));
+
+// Draw links
+const link = g.append("g")
+  .selectAll("line")
+  .data(links)
+  .join("line")
+  .attr("stroke", linkColor)
+  .attr("stroke-width", linkWidth)
+  .attr("stroke-dasharray", d => d.type === "shared" ? "4,3" : null);
+
+// Edge labels
+const edgeLabels = g.append("g")
+  .selectAll("text")
+  .data(links.filter(d => d.label && d.type === "epstein"))
+  .join("text")
+  .attr("class", "edge-label")
+  .attr("text-anchor", "middle")
+  .text(d => d.label);
+
+// Node groups
+const node = g.append("g")
+  .selectAll("g")
+  .data(nodes)
+  .join("g")
+  .attr("cursor", "pointer")
+  .call(d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended));
+
+// Node circles
+node.append("circle")
+  .attr("r", nodeRadius)
+  .attr("fill", d => {
+    const c = nodeColor(d);
+    return d.type === "institution" ? c : c;
+  })
+  .attr("fill-opacity", d => d.type === "institution" ? 0.35 : 0.7)
+  .attr("stroke", nodeColor)
+  .attr("stroke-width", d => d.id === "epstein" ? 2.5 : 1.5)
+  .attr("stroke-opacity", 0.8);
+
+// Pulsing ring on Epstein node
+node.filter(d => d.id === "epstein")
+  .append("circle")
+  .attr("r", 36)
+  .attr("fill", "none")
+  .attr("stroke", "#c04040")
+  .attr("stroke-width", 1)
+  .attr("stroke-opacity", 0.3)
+  .attr("class", "pulse-ring");
+
+// Labels
+node.append("text")
+  .attr("dy", d => nodeRadius(d) + 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", d => d.id === "epstein" ? "#c04040" : d.type === "institution" ? "#555" : "#888")
+  .attr("font-size", d => d.id === "epstein" ? "13px" : d.type === "institution" ? "10px" : "11px")
+  .attr("font-weight", d => d.id === "epstein" ? "700" : d.type === "institution" ? "400" : "500")
+  .text(d => d.name);
+
+// Mention count badges for people
+node.filter(d => d.mentions && d.id !== "epstein")
+  .append("text")
+  .attr("dy", 4)
+  .attr("text-anchor", "middle")
+  .attr("fill", "#fff")
+  .attr("font-size", "9px")
+  .attr("font-weight", "600")
+  .attr("opacity", 0.9)
+  .text(d => d.mentions >= 1000 ? (d.mentions / 1000).toFixed(0) + "K" : d.mentions);
+
+// Epstein label inside node
+node.filter(d => d.id === "epstein")
+  .append("text")
+  .attr("dy", 5)
+  .attr("text-anchor", "middle")
+  .attr("fill", "#fff")
+  .attr("font-size", "11px")
+  .attr("font-weight", "700")
+  .text("JE");
+
+// ─── Interactions ────────────────────────────────────────────────────
+
+const tooltip = d3.select("#tooltip");
+let selectedNode = null;
+
+node.on("mouseover", function(event, d) {
+  if (d.type === "institution") return;
+  tooltip.select(".tt-name").text(d.name);
+  tooltip.select(".tt-role").text(d.role || "");
+  tooltip.classed("visible", true);
+
+  // Highlight connected
+  link.attr("stroke-opacity", l =>
+    (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1
+  );
+  node.select("circle")
+    .attr("opacity", n => {
+      if (n.id === d.id) return 1;
+      const connected = links.some(l =>
+        (l.source.id === d.id && l.target.id === n.id) ||
+        (l.target.id === d.id && l.source.id === n.id)
+      );
+      return connected ? 1 : 0.15;
+    });
+  node.select("text")
+    .attr("opacity", n => {
+      if (n.id === d.id) return 1;
+      const connected = links.some(l =>
+        (l.source.id === d.id && l.target.id === n.id) ||
+        (l.target.id === d.id && l.source.id === n.id)
+      );
+      return connected ? 1 : 0.15;
+    });
+})
+.on("mousemove", function(event) {
+  tooltip
+    .style("left", (event.pageX + 14) + "px")
+    .style("top", (event.pageY - 10) + "px");
+})
+.on("mouseout", function() {
+  tooltip.classed("visible", false);
+  link.attr("stroke-opacity", 1);
+  node.select("circle").attr("opacity", 1);
+  node.selectAll("text").attr("opacity", 1);
+})
+.on("click", function(event, d) {
+  event.stopPropagation();
+  if (d.type === "institution") return;
+  showDetail(d);
+});
+
+svg.on("click", function() {
+  closePanel();
+});
+
+function showDetail(d) {
+  selectedNode = d;
+  const panel = document.getElementById("detail-panel");
+  document.getElementById("panel-name").textContent = d.name;
+  document.getElementById("panel-role").textContent = d.role || "";
+  document.getElementById("panel-affiliation").textContent = d.affiliation || "N/A";
+  document.getElementById("panel-appearance").textContent = d.appearance || "N/A";
+  document.getElementById("panel-status").textContent = d.status || "N/A";
+
+  // Build connections list
+  const connList = document.getElementById("panel-connections");
+  connList.innerHTML = "";
+  links.forEach(l => {
+    let other = null;
+    let label = l.label;
+    if (l.source.id === d.id || (typeof l.source === "string" && l.source === d.id)) {
+      other = typeof l.target === "object" ? l.target : nodes.find(n => n.id === l.target);
+    } else if (l.target.id === d.id || (typeof l.target === "string" && l.target === d.id)) {
+      other = typeof l.source === "object" ? l.source : nodes.find(n => n.id === l.source);
+    }
+    if (other && other.type !== "institution") {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="conn-name">${other.name}</span><span class="conn-via">${label}</span>`;
+      li.onclick = () => {
+        const personData = people.find(p => p.id === other.id);
+        if (personData) showDetail(personData);
+      };
+      connList.appendChild(li);
+    }
+  });
+
+  panel.classList.add("open");
+}
+
+function closePanel() {
+  selectedNode = null;
+  document.getElementById("detail-panel").classList.remove("open");
+}
+
+// Simulation tick
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  edgeLabels
+    .attr("x", d => (d.source.x + d.target.x) / 2)
+    .attr("y", d => (d.source.y + d.target.y) / 2);
+
+  node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// Drag handlers
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+// Fade out instructions after 6 seconds
+setTimeout(() => {
+  document.getElementById("instructions").style.opacity = "0";
+  setTimeout(() => {
+    document.getElementById("instructions").style.display = "none";
+  }, 600);
+}, 6000);
+
+// Pulse animation
+function animatePulse() {
+  d3.selectAll(".pulse-ring")
+    .transition()
+    .duration(2000)
+    .attr("r", 44)
+    .attr("stroke-opacity", 0)
+    .transition()
+    .duration(0)
+    .attr("r", 36)
+    .attr("stroke-opacity", 0.3)
+    .on("end", animatePulse);
+}
+animatePulse();
+</script>
+</body>
+</html>
