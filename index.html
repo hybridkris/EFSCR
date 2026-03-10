@@ -255,7 +255,6 @@
     pointer-events: none;
   }
 
-  /* Glow filter for selected */
   .node-glow {
     filter: url(#glow);
   }
@@ -280,19 +279,43 @@
   #instructions span {
     color: #888;
   }
+
+  /* Stats bar */
+  #stats-bar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(12,12,18,0.85);
+    border: 1px solid rgba(200,80,80,0.15);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 10px;
+    color: #555;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  #stats-bar .stat { color: #888; }
+
+  .deceased-marker {
+    font-size: 8px;
+    fill: #666;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
 
 <div id="header">
   <div>
-    <h1>Epstein Files: <span>Scientists & Consciousness Researchers</span></h1>
-    <div class="subtitle">Resignations, Consequences & Connections — DOJ Release Jan 2026</div>
+    <h1>Epstein Files: <span>Scientists, Tech & Academic Network</span></h1>
+    <div class="subtitle">Resignations, Consequences & Connections — DOJ Release Jan 2026 &middot; Updated Mar 2026</div>
   </div>
   <div id="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#c04040"></div> Resigned / Left</div>
     <div class="legend-item"><div class="legend-dot" style="background:#e8a040"></div> Under Investigation</div>
     <div class="legend-item"><div class="legend-dot" style="background:#6080c0"></div> Other Consequences</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#50a060"></div> Named / No Action Yet</div>
     <div class="legend-item"><div class="legend-dot" style="background:#404060"></div> Institution</div>
   </div>
 </div>
@@ -336,18 +359,23 @@
   <span>Click</span> a node for details &middot; <span>Drag</span> to reposition &middot; <span>Scroll</span> to zoom &middot; <span>Click</span> background to deselect
 </div>
 
+<div id="stats-bar">
+  <span class="stat" id="stat-people"></span> &middot; <span class="stat" id="stat-institutions"></span> &middot; <span class="stat" id="stat-links"></span>
+</div>
+
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
 // ─── Data ────────────────────────────────────────────────────────────
 
 const people = [
+  // ── Original 9 from the document (updated with latest info) ──
   {
     id: "axel",
     name: "Richard Axel",
     role: "Nobel Laureate; Co-Director, Zuckerman Mind Brain Behavior Institute; HHMI Investigator",
     affiliation: "Columbia University / Howard Hughes Medical Institute",
-    appearance: "Named 933 times in DOJ files. Longstanding personal friendship with Epstein spanning years of correspondence and meetings.",
-    status: "Resigned as co-director of Zuckerman Institute and as HHMI Investigator (Feb 2026). Continues as professor.",
+    appearance: "Named 933 times in DOJ files. Longstanding personal friendship with Epstein spanning years of correspondence, lunches, and dinners.",
+    status: "Resigned as co-director of Zuckerman Institute and as HHMI Investigator (Feb 2026). Continues as professor at Columbia.",
     category: "resigned",
     mentions: 933,
     fields: ["neuroscience", "consciousness"]
@@ -357,7 +385,7 @@ const people = [
     name: "Stuart Hameroff",
     role: "Director, Center for Consciousness Studies; Professor of Anesthesiology",
     affiliation: "University of Arizona",
-    appearance: "Obtained $50,000 from Epstein's foundation (Gratitude America Ltd.) for The Science of Consciousness conference in San Diego (2017). Stayed at Epstein's NYC apartment in 2016. 2016 email chain shows meetings with Epstein in New York.",
+    appearance: "Obtained $50,000 from Epstein\u2019s foundation (Gratitude America Ltd.) for The Science of Consciousness conference in San Diego (2017). Stayed at Epstein\u2019s NYC apartment in 2016. 2016 email chain shows meetings with Epstein in New York.",
     status: "April 2026 Science of Consciousness conference cancelled. Hameroff publicly apologized to Epstein survivors and colleagues.",
     category: "consequences",
     mentions: 50,
@@ -369,7 +397,7 @@ const people = [
     role: "Professor; Former Harvard President; Former U.S. Treasury Secretary",
     affiliation: "Harvard University / OpenAI Board",
     appearance: "Repeat presence in Epstein files. Extensive email correspondence with Epstein spanning years. Files revealed deeper ties than previously disclosed.",
-    status: "Resigned from OpenAI board (Nov 2025). On leave from Harvard since Nov 2025. Announced full resignation from Harvard professorship effective end of academic year (Feb 2026).",
+    status: "Resigned from OpenAI board (Nov 2025). On leave from Harvard since Nov 2025. Full resignation from Harvard professorship effective end of academic year (Feb 2026).",
     category: "resigned",
     mentions: 200,
     fields: ["economics", "policy", "AI"]
@@ -391,7 +419,7 @@ const people = [
     role: "Cognitive Scientist / AI Researcher",
     affiliation: "MIT Media Lab",
     appearance: "Epstein subsidized his MIT Media Lab hiring with $300,000 in donations (2013\u20132014). Epstein also covered Bach\u2019s rent, flights, medical bills, and children\u2019s private school tuition (2013\u20132019). Controversial emails revealed where Bach made claims about race and cognitive development.",
-    status: "Lost advisory positions, had presentations and talks cancelled. Business partners severed ties. Reported receiving threats. Not formally \u201cresigned\u201d but suffered significant professional consequences.",
+    status: "Lost advisory positions, had presentations and talks cancelled. Business partners severed ties. Reported receiving threats. Suffered significant professional consequences.",
     category: "consequences",
     mentions: 100,
     fields: ["AI", "consciousness", "cognitive science"]
@@ -401,9 +429,9 @@ const people = [
     name: "Mark Tramo",
     role: "Associate Adjunct Professor of Neurology; Music, Mind & Brain researcher",
     affiliation: "University of California, Los Angeles (UCLA)",
-    appearance: "Exchanged approximately 1,200 emails with Epstein (2010\u20132019). Epstein\u2019s foundation donated ~$100,000 to support Tramo\u2019s institute in 2017. Thanked Epstein for making his UCLA Music, Mind, and Brain course possible.",
-    status: "Profile removed from UCLA\u2019s media experts list. Petition with 10,000+ signatures calling for termination. Classes moved to remote/Zoom. Under university review.",
-    category: "investigation",
+    appearance: "Exchanged approximately 1,200 emails with Epstein (2010\u20132019). Epstein\u2019s foundation donated ~$100,000 to support Tramo\u2019s institute in 2017. Discussed students and classes with Epstein; passed along students for research opportunities.",
+    status: "Announced retirement effective June 2026, cancelled spring quarter class. Profile removed from UCLA\u2019s media experts list. Petition with 10,000+ signatures calling for termination (Mar 2026).",
+    category: "resigned",
     mentions: 1200,
     fields: ["neuroscience", "consciousness"]
   },
@@ -413,7 +441,7 @@ const people = [
     role: "Professor of Genetics",
     affiliation: "Harvard University",
     appearance: "Received funding from Epstein or through his associates. Co-founded an investment company with Epstein (2014). Epstein tissue samples processed in Church\u2019s lab caused internal controversy. Proposed Epstein-funded \u201cpleasure genome initiative\u201d and life extension lab.",
-    status: "Under expanded Harvard investigation. Apologized in 2019. Has not resigned as of Feb 2026.",
+    status: "Under expanded Harvard investigation. Apologized in 2019. Has not resigned as of Mar 2026.",
     category: "investigation",
     mentions: 300,
     fields: ["genetics", "biology"]
@@ -435,10 +463,211 @@ const people = [
     role: "Professor of Mathematics and Biology; Director, Program for Evolutionary Dynamics",
     affiliation: "Harvard University",
     appearance: "Deep financial relationship with Epstein. Epstein donated millions to Nowak\u2019s program. Extensive correspondence revealed in files showing ongoing relationship post-conviction.",
-    status: "Under expanded Harvard investigation. Previously faced scrutiny in 2019 Harvard review. Status as of Feb 2026 under active review.",
+    status: "Placed on paid administrative leave by Harvard. Under expanded Harvard investigation. Previously faced scrutiny in 2019 Harvard review (Mar 2026).",
     category: "investigation",
     mentions: 400,
     fields: ["mathematics", "biology", "evolution"]
+  },
+
+  // ── Newly added from research ──
+  {
+    id: "gelernter",
+    name: "David Gelernter",
+    role: "Professor of Computer Science",
+    affiliation: "Yale University",
+    appearance: "Exchanged emails with Epstein between 2009 and 2015. Described a Yale undergraduate as a \u201cv small goodlooking blonde\u201d in a 2011 email to Epstein, characterizing it as a recommendation letter.",
+    status: "Barred from teaching by Yale pending review (Feb 2026). Gelernter defended his correspondence and said he does not regret the email.",
+    category: "investigation",
+    mentions: 80,
+    fields: ["computer science", "AI"]
+  },
+  {
+    id: "attia",
+    name: "Peter Attia",
+    role: "Physician; Longevity Researcher; Author",
+    affiliation: "CBS News (contributor) / AG1 (adviser)",
+    appearance: "Name appears hundreds of times in released records. Apologized for \u201cembarrassing, tasteless, and indefensible\u201d emails exchanged with Epstein.",
+    status: "Resigned as contributor to CBS News (Feb 2026). No longer a scientific adviser for health supplement company AG1.",
+    category: "resigned",
+    mentions: 300,
+    fields: ["medicine", "longevity"]
+  },
+  {
+    id: "botstein",
+    name: "Leon Botstein",
+    role: "President of Bard College; Conductor",
+    affiliation: "Bard College",
+    appearance: "Named over 3,500 times in files. Years of email contact with Epstein extending to 2017. Relationship extended further than Botstein previously disclosed, including social exchanges and references to visits, including reportedly purchasing an expensive watch together.",
+    status: "Bard College hired outside law firm for independent investigation into Botstein\u2019s Epstein communications (Feb 2026). Botstein\u2019s 50-year tenure under pressure.",
+    category: "investigation",
+    mentions: 3500,
+    fields: ["education", "arts"]
+  },
+  {
+    id: "horner",
+    name: "Jack Horner",
+    role: "Paleontologist; Jurassic Park Consultant; Lecturer",
+    affiliation: "Chapman University",
+    appearance: "Emails with Epstein dated to 2012. Visited Epstein\u2019s ranch in New Mexico on an apparent hunt for fossils while seeking funding.",
+    status: "Left Chapman University after name surfaced in files (Feb 2026).",
+    category: "resigned",
+    mentions: 30,
+    fields: ["paleontology"]
+  },
+  {
+    id: "goertzel",
+    name: "Ben Goertzel",
+    role: "AI Researcher; CEO of SingularityNET; AGI Pioneer",
+    affiliation: "SingularityNET / OpenCog",
+    appearance: "Introduced Epstein to Itamar Arel in 2009. Co-authored $3M \u201crobotic AGI toddler\u201d proposal for the Epstein Foundation with Arel. Epstein funded OpenCog (Hong Kong-based open-source AGI project) and Addis AI Lab in Ethiopia.",
+    status: "Stated he was \u201ca small part of [Epstein\u2019s] campaign to wash his reputation.\u201d Expressed regret. Lost advisory positions and had talks cancelled.",
+    category: "consequences",
+    mentions: 150,
+    fields: ["AI", "AGI", "consciousness"]
+  },
+  {
+    id: "arel",
+    name: "Itamar Arel",
+    role: "Former Associate Professor of Computer Sciences",
+    affiliation: "University of Tennessee",
+    appearance: "Spoke with Epstein between 2009 and 2016 about facial recognition technology and humanoid robots. Project funded by Epstein VI Foundation using UT students\u2019 time. Co-authored AGI proposal with Goertzel.",
+    status: "Profile disappeared from UT on Feb 4, 2026 after Epstein file mentions went viral. Has since worked in private industry.",
+    category: "resigned",
+    mentions: 100,
+    fields: ["AI", "machine learning", "facial recognition"]
+  },
+  {
+    id: "lloyd",
+    name: "Seth Lloyd",
+    role: "Professor of Mechanical Engineering; Quantum Computing Pioneer",
+    affiliation: "Massachusetts Institute of Technology (MIT)",
+    appearance: "Reached out to Epstein for funding due to frustrations with traditional grant mechanisms. Received funding from Epstein for quantum computing research. Visited Epstein\u2019s island.",
+    status: "Placed on paid administrative leave by MIT in 2020. Returned to teaching. Under renewed scrutiny following 2026 file release.",
+    category: "consequences",
+    mentions: 120,
+    fields: ["quantum computing", "physics"]
+  },
+  {
+    id: "boyden",
+    name: "Ed Boyden",
+    role: "Professor of Neuroscience; Founder of Optogenetics",
+    affiliation: "Massachusetts Institute of Technology (MIT)",
+    appearance: "Dined with Epstein, Elon Musk, Mark Zuckerberg, and Peter Thiel in August 2015. Misrepresented interactions with Epstein in 2020 MIT report. Files show at least one visit to Epstein\u2019s ranch in New Mexico.",
+    status: "Under active investigation following discrepancies between 2020 MIT report and newly released files.",
+    category: "investigation",
+    mentions: 60,
+    fields: ["neuroscience", "optogenetics"]
+  },
+  {
+    id: "kosslyn",
+    name: "Steven Kosslyn",
+    role: "Psychologist; Former Dean of Social Sciences",
+    affiliation: "Harvard University / Minerva University",
+    appearance: "Made Epstein a visiting researcher in Harvard\u2019s psychology department in 2006. Visited Epstein in jail in 2008. Helped Epstein draft scripts to restore his public image. In 2010, provided a child psychologist referral for a 15-year-old girl at Epstein\u2019s request.",
+    status: "Under scrutiny. Has left Harvard; currently at Minerva University. No formal institutional action reported as of Mar 2026.",
+    category: "consequences",
+    mentions: 200,
+    fields: ["psychology", "cognitive science"]
+  },
+  {
+    id: "krauss",
+    name: "Lawrence Krauss",
+    role: "Former Professor of Physics; Author; Podcaster",
+    affiliation: "Arizona State University (former)",
+    appearance: "Maintained regular contact with Epstein. Helped organize conferences for scientists and researchers. Previously defended Epstein publicly before 2019 revelations.",
+    status: "Had already resigned from ASU in 2019 over separate misconduct allegations. Criticized the \u201cmoral panic\u201d around the 2026 files. No new institutional action.",
+    category: "consequences",
+    mentions: 150,
+    fields: ["physics", "cosmology"]
+  },
+  {
+    id: "damasio",
+    name: "Antonio Damasio",
+    role: "Professor of Neuroscience; Director, Brain and Creativity Institute",
+    affiliation: "University of Southern California (USC)",
+    appearance: "Asked Epstein to help fund robotics neuroscience at USC. Told media he was \u201clooking for a prestigious philanthropist, not a criminal.\u201d",
+    status: "Named in files. No formal institutional action reported as of Mar 2026.",
+    category: "named",
+    mentions: 40,
+    fields: ["neuroscience", "consciousness", "AI"]
+  },
+  {
+    id: "christakis",
+    name: "Nicholas Christakis",
+    role: "Professor of Sociology and Medicine; Director, Human Nature Lab",
+    affiliation: "Yale University",
+    appearance: "Met with Epstein in 2013 and corresponded with him between 2013 and 2016 in context of fundraising for his lab. Never received funding from Epstein.",
+    status: "Named in files. Yale confirmed no financial gift from Epstein. No formal action taken.",
+    category: "named",
+    mentions: 30,
+    fields: ["sociology", "medicine", "network science"]
+  },
+  {
+    id: "chomsky",
+    name: "Noam Chomsky",
+    role: "Professor Emeritus of Linguistics; Political Commentator",
+    affiliation: "Massachusetts Institute of Technology (MIT)",
+    appearance: "Documented correspondence with Epstein revealed in files. Met with Epstein on multiple occasions.",
+    status: "Wife Valeria Chomsky issued public apology (Feb 2026), calling the contact a \u201cgrave mistake\u201d and characterizing the couple as \u201ccareless\u201d and \u201cnaive.\u201d",
+    category: "consequences",
+    mentions: 80,
+    fields: ["linguistics", "cognitive science"]
+  },
+  {
+    id: "minsky",
+    name: "Marvin Minsky",
+    role: "Co-founder, MIT AI Lab; Pioneer of Artificial Intelligence",
+    affiliation: "Massachusetts Institute of Technology (MIT)",
+    appearance: "Organized two academic symposia on artificial intelligence at Epstein\u2019s compound: one in 2002, another in 2011. Named in Virginia Giuffre\u2019s deposition regarding Epstein\u2019s island.",
+    status: "Deceased (Jan 2016). Posthumous scrutiny. MIT AI lab and foundation faced reputational fallout.",
+    category: "named",
+    mentions: 200,
+    deceased: true,
+    fields: ["AI", "cognitive science"]
+  },
+  {
+    id: "ito",
+    name: "Joi Ito",
+    role: "Former Director, MIT Media Lab",
+    affiliation: "MIT Media Lab / Digital Garage",
+    appearance: "Took $1.7M from Epstein to support the Media Lab and personal investment vehicles. Files reveal extensive coordination to disguise donations. Orchestrated anonymous and directed donations from Epstein.",
+    status: "Resigned from MIT in 2019. In Mar 2026, announced resignation from Digital Society Initiative and retirement from Digital Garage board following renewed scrutiny from DOJ files.",
+    category: "resigned",
+    mentions: 500,
+    fields: ["technology", "media", "AI"]
+  },
+  {
+    id: "trivers",
+    name: "Robert Trivers",
+    role: "Evolutionary Biologist; Professor",
+    affiliation: "Rutgers University",
+    appearance: "Received $40,000 from Epstein for research on knee symmetry and sprinting ability. Correspondence with Epstein dates to 2009 (post-conviction). In 2013, introduced Gordon Getty to Epstein.",
+    status: "Named in files. No formal institutional action reported.",
+    category: "named",
+    mentions: 60,
+    fields: ["evolutionary biology", "genetics"]
+  },
+  {
+    id: "ariely",
+    name: "Dan Ariely",
+    role: "Professor of Psychology and Behavioral Economics",
+    affiliation: "Duke University",
+    appearance: "Corresponded with Epstein between 2010 and 2016. Appears to have met at least seven times. Ariely claimed only \u201cfour occasions over nearly a decade.\u201d",
+    status: "Named in files. Under scrutiny at Duke. No formal action reported as of Mar 2026.",
+    category: "named",
+    mentions: 80,
+    fields: ["behavioral economics", "psychology"]
+  },
+  {
+    id: "brende",
+    name: "B\u00f8rge Brende",
+    role: "President, World Economic Forum",
+    affiliation: "World Economic Forum (WEF)",
+    appearance: "Files revealed relationship with Epstein prompting WEF to launch internal investigation.",
+    status: "Quit role at World Economic Forum (Feb 28, 2026) after WEF launched investigation into his Epstein relationship.",
+    category: "resigned",
+    mentions: 50,
+    fields: ["policy", "economics"]
   }
 ];
 
@@ -454,21 +683,31 @@ const epstein = {
 // Institution nodes
 const institutions = [
   { id: "harvard", name: "Harvard University", type: "institution" },
-  { id: "mit", name: "MIT Media Lab", type: "institution" },
+  { id: "mit", name: "MIT", type: "institution" },
   { id: "columbia", name: "Columbia University", type: "institution" },
   { id: "ucla", name: "UCLA", type: "institution" },
-  { id: "uarizona", name: "University of Arizona", type: "institution" },
+  { id: "uarizona", name: "Univ. of Arizona", type: "institution" },
   { id: "perimeter", name: "Perimeter Institute", type: "institution" },
   { id: "polyu", name: "Hong Kong PolyU", type: "institution" },
   { id: "openai", name: "OpenAI", type: "institution" },
-  { id: "hhmi", name: "HHMI", type: "institution" }
+  { id: "hhmi", name: "HHMI", type: "institution" },
+  { id: "yale", name: "Yale University", type: "institution" },
+  { id: "usc", name: "USC", type: "institution" },
+  { id: "bard", name: "Bard College", type: "institution" },
+  { id: "chapman", name: "Chapman University", type: "institution" },
+  { id: "ut", name: "Univ. of Tennessee", type: "institution" },
+  { id: "duke", name: "Duke University", type: "institution" },
+  { id: "rutgers", name: "Rutgers University", type: "institution" },
+  { id: "asu", name: "Arizona State Univ.", type: "institution" },
+  { id: "wef", name: "World Economic Forum", type: "institution" },
+  { id: "minerva", name: "Minerva University", type: "institution" }
 ];
 
 // Define all relationships
 const relationships = [
-  // Epstein connections
+  // ── Epstein direct connections ──
   { source: "epstein", target: "axel", label: "933 mentions; friendship", type: "epstein", strength: 0.9 },
-  { source: "epstein", target: "hameroff", label: "$50K funding; hosted", type: "epstein", strength: 0.5 },
+  { source: "epstein", target: "hameroff", label: "$50K funding; hosted in NYC", type: "epstein", strength: 0.5 },
   { source: "epstein", target: "summers", label: "extensive correspondence", type: "epstein", strength: 0.8 },
   { source: "epstein", target: "smolin", label: "182 mentions; post-2008 contact", type: "epstein", strength: 0.6 },
   { source: "epstein", target: "bach", label: "$300K donations; personal expenses", type: "epstein", strength: 0.85 },
@@ -476,41 +715,93 @@ const relationships = [
   { source: "epstein", target: "church", label: "co-founded company; lab funding", type: "epstein", strength: 0.85 },
   { source: "epstein", target: "yu", label: "1,000+ mentions; 548+ emails", type: "epstein", strength: 0.9 },
   { source: "epstein", target: "nowak", label: "millions donated; deep ties", type: "epstein", strength: 0.95 },
+  { source: "epstein", target: "gelernter", label: "emails 2009\u20132015; student referral", type: "epstein", strength: 0.5 },
+  { source: "epstein", target: "attia", label: "hundreds of mentions; emails", type: "epstein", strength: 0.7 },
+  { source: "epstein", target: "botstein", label: "3,500+ mentions; social visits", type: "epstein", strength: 0.95 },
+  { source: "epstein", target: "horner", label: "ranch visit 2012; funding request", type: "epstein", strength: 0.35 },
+  { source: "epstein", target: "goertzel", label: "$3M AGI proposal; funded OpenCog", type: "epstein", strength: 0.7 },
+  { source: "epstein", target: "arel", label: "AI projects 2009\u20132016; funded via Foundation", type: "epstein", strength: 0.65 },
+  { source: "epstein", target: "lloyd", label: "quantum research funding; island visit", type: "epstein", strength: 0.7 },
+  { source: "epstein", target: "boyden", label: "dinner w/ Musk, Zuck, Thiel; ranch visit", type: "epstein", strength: 0.5 },
+  { source: "epstein", target: "kosslyn", label: "visiting researcher; jail visit; PR help", type: "epstein", strength: 0.8 },
+  { source: "epstein", target: "krauss", label: "regular contact; organized conferences", type: "epstein", strength: 0.65 },
+  { source: "epstein", target: "damasio", label: "sought robotics funding at USC", type: "epstein", strength: 0.4 },
+  { source: "epstein", target: "christakis", label: "met 2013; corresponded 2013\u20132016", type: "epstein", strength: 0.3 },
+  { source: "epstein", target: "chomsky", label: "correspondence; multiple meetings", type: "epstein", strength: 0.45 },
+  { source: "epstein", target: "minsky", label: "hosted AI symposia 2002, 2011", type: "epstein", strength: 0.75 },
+  { source: "epstein", target: "ito", label: "$1.7M to Media Lab; directed donations", type: "epstein", strength: 0.9 },
+  { source: "epstein", target: "trivers", label: "$40K research funding", type: "epstein", strength: 0.4 },
+  { source: "epstein", target: "ariely", label: "7+ meetings; correspondence 2010\u20132016", type: "epstein", strength: 0.5 },
+  { source: "epstein", target: "brende", label: "relationship triggered WEF probe", type: "epstein", strength: 0.5 },
 
-  // Institution connections
+  // ── Institution connections ──
   { source: "axel", target: "columbia", label: "faculty", type: "institution" },
-  { source: "axel", target: "hhmi", label: "investigator", type: "institution" },
+  { source: "axel", target: "hhmi", label: "investigator (resigned)", type: "institution" },
   { source: "hameroff", target: "uarizona", label: "professor", type: "institution" },
   { source: "summers", target: "harvard", label: "professor; former president", type: "institution" },
   { source: "summers", target: "openai", label: "board member (resigned)", type: "institution" },
-  { source: "smolin", target: "perimeter", label: "founding faculty", type: "institution" },
+  { source: "smolin", target: "perimeter", label: "founding faculty (paused)", type: "institution" },
   { source: "bach", target: "mit", label: "researcher", type: "institution" },
-  { source: "tramo", target: "ucla", label: "professor", type: "institution" },
+  { source: "tramo", target: "ucla", label: "professor (retiring)", type: "institution" },
   { source: "church", target: "harvard", label: "professor", type: "institution" },
-  { source: "yu", target: "polyu", label: "director", type: "institution" },
-  { source: "nowak", target: "harvard", label: "professor; director", type: "institution" },
+  { source: "yu", target: "polyu", label: "director (retired)", type: "institution" },
+  { source: "nowak", target: "harvard", label: "professor (on leave)", type: "institution" },
+  { source: "gelernter", target: "yale", label: "professor (barred from teaching)", type: "institution" },
+  { source: "attia", target: "mit", label: "", type: "none" },
+  { source: "botstein", target: "bard", label: "president (under investigation)", type: "institution" },
+  { source: "horner", target: "chapman", label: "lecturer (left)", type: "institution" },
+  { source: "goertzel", target: "mit", label: "", type: "none" },
+  { source: "arel", target: "ut", label: "former professor (departed)", type: "institution" },
+  { source: "lloyd", target: "mit", label: "professor", type: "institution" },
+  { source: "boyden", target: "mit", label: "professor", type: "institution" },
+  { source: "kosslyn", target: "harvard", label: "former dean", type: "institution" },
+  { source: "kosslyn", target: "minerva", label: "current role", type: "institution" },
+  { source: "krauss", target: "asu", label: "former professor", type: "institution" },
+  { source: "damasio", target: "usc", label: "professor", type: "institution" },
+  { source: "christakis", target: "yale", label: "professor", type: "institution" },
+  { source: "chomsky", target: "mit", label: "professor emeritus", type: "institution" },
+  { source: "minsky", target: "mit", label: "co-founded AI lab", type: "institution" },
+  { source: "ito", target: "mit", label: "former Media Lab director", type: "institution" },
+  { source: "trivers", target: "rutgers", label: "professor", type: "institution" },
+  { source: "ariely", target: "duke", label: "professor", type: "institution" },
+  { source: "brende", target: "wef", label: "president (resigned)", type: "institution" },
 
-  // Inter-person connections
+  // ── Inter-person connections ──
   { source: "yu", target: "hameroff", label: "arranged Epstein apartment stay", type: "interpersonal" },
+  { source: "goertzel", target: "arel", label: "co-authored AGI \u201crobot toddler\u201d proposal for Epstein", type: "interpersonal" },
+  { source: "ito", target: "bach", label: "Ito directed Epstein funds to hire Bach at MIT", type: "interpersonal" },
+  { source: "ito", target: "minsky", label: "both MIT; Epstein AI symposia connections", type: "interpersonal" },
+  { source: "kosslyn", target: "church", label: "both Harvard; deep Epstein involvement", type: "shared" },
   { source: "church", target: "nowak", label: "both under Harvard investigation", type: "shared" },
   { source: "summers", target: "nowak", label: "both Harvard; Epstein funding ties", type: "shared" },
   { source: "summers", target: "church", label: "both Harvard; Epstein funding ties", type: "shared" },
+  { source: "summers", target: "kosslyn", label: "Harvard overlap; Epstein ties", type: "shared" },
   { source: "hameroff", target: "bach", label: "consciousness research overlap", type: "shared" },
   { source: "hameroff", target: "smolin", label: "consciousness & physics overlap", type: "shared" },
-  { source: "bach", target: "yu", label: "AI & consciousness overlap; Epstein funding", type: "shared" },
+  { source: "bach", target: "yu", label: "AI & consciousness; Epstein funding", type: "shared" },
   { source: "axel", target: "tramo", label: "neuroscience; heavy Epstein correspondence", type: "shared" },
-  { source: "church", target: "epstein", label: "", type: "none" }, // already defined above, skip
+  { source: "lloyd", target: "chomsky", label: "both MIT; Epstein funding recipients", type: "shared" },
+  { source: "lloyd", target: "boyden", label: "both MIT; Epstein-linked research", type: "shared" },
+  { source: "boyden", target: "minsky", label: "both MIT neuroscience/AI; Epstein ties", type: "shared" },
+  { source: "gelernter", target: "christakis", label: "both Yale; named in files", type: "shared" },
+  { source: "krauss", target: "hameroff", label: "Arizona-based; conference/event overlap", type: "shared" },
+  { source: "damasio", target: "tramo", label: "neuroscience; Epstein funding interests", type: "shared" },
+  { source: "goertzel", target: "yu", label: "AI & consciousness; Hong Kong connections", type: "shared" },
+  { source: "church", target: "attia", label: "longevity/genetics overlap; Epstein interest area", type: "shared" },
+  { source: "trivers", target: "church", label: "evolutionary biology / genetics overlap", type: "shared" },
 ];
 
-// Filter out duplicate
+// Filter out placeholder links
 const links = relationships.filter(r => r.type !== "none");
 
 // Build node array
-const nodes = [
-  epstein,
-  ...people,
-  ...institutions
-];
+const allPeople = [...people];
+const nodes = [epstein, ...allPeople, ...institutions];
+
+// ── Stats ──
+document.getElementById("stat-people").textContent = allPeople.length + " people";
+document.getElementById("stat-institutions").textContent = institutions.length + " institutions";
+document.getElementById("stat-links").textContent = links.length + " connections";
 
 // ─── Visualization ───────────────────────────────────────────────────
 
@@ -520,7 +811,6 @@ const height = window.innerHeight;
 const svg = d3.select("#graph")
   .attr("viewBox", [0, 0, width, height]);
 
-// Defs for glow effect
 const defs = svg.append("defs");
 
 const glowFilter = defs.append("filter")
@@ -534,32 +824,16 @@ const feMerge = glowFilter.append("feMerge");
 feMerge.append("feMergeNode").attr("in", "coloredBlur");
 feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-// Arrow markers
-defs.append("marker")
-  .attr("id", "arrow")
-  .attr("viewBox", "0 -5 10 10")
-  .attr("refX", 20)
-  .attr("refY", 0)
-  .attr("markerWidth", 6)
-  .attr("markerHeight", 6)
-  .attr("orient", "auto")
-  .append("path")
-  .attr("d", "M0,-5L10,0L0,5")
-  .attr("fill", "rgba(200,80,80,0.3)");
-
 const g = svg.append("g");
 
-// Zoom
 const zoom = d3.zoom()
-  .scaleExtent([0.2, 4])
+  .scaleExtent([0.15, 4])
   .on("zoom", (event) => {
     g.attr("transform", event.transform);
   });
 
 svg.call(zoom);
-
-// Center initial view
-svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2 - 50, height / 2 - 30).scale(0.85));
+svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55));
 
 // Color helpers
 function nodeColor(d) {
@@ -567,48 +841,50 @@ function nodeColor(d) {
   if (d.type === "institution") return "#404060";
   if (d.category === "resigned") return "#c04040";
   if (d.category === "investigation") return "#e8a040";
+  if (d.category === "named") return "#50a060";
   return "#6080c0";
 }
 
 function nodeRadius(d) {
-  if (d.id === "epstein") return 32;
-  if (d.type === "institution") return 14;
+  if (d.id === "epstein") return 36;
+  if (d.type === "institution") return 12;
   const m = d.mentions || 0;
-  return Math.max(16, Math.min(28, 14 + Math.sqrt(m) * 0.5));
+  return Math.max(14, Math.min(26, 12 + Math.sqrt(m) * 0.45));
 }
 
 function linkColor(d) {
-  if (d.type === "epstein") return "rgba(200,80,80,0.35)";
-  if (d.type === "institution") return "rgba(64,64,96,0.25)";
+  if (d.type === "epstein") return "rgba(200,80,80,0.3)";
+  if (d.type === "institution") return "rgba(64,64,96,0.2)";
   if (d.type === "interpersonal") return "rgba(100,200,150,0.35)";
-  return "rgba(100,140,200,0.2)";
+  return "rgba(100,140,200,0.18)";
 }
 
 function linkWidth(d) {
-  if (d.type === "epstein") return 1.5 + (d.strength || 0.5) * 2;
-  if (d.type === "interpersonal") return 1.8;
-  return 0.8;
+  if (d.type === "epstein") return 1 + (d.strength || 0.5) * 2;
+  if (d.type === "interpersonal") return 1.5;
+  return 0.6;
 }
 
 // Simulation
 const simulation = d3.forceSimulation(nodes)
   .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
-    if (d.type === "epstein") return 180 + (1 - (d.strength || 0.5)) * 80;
-    if (d.type === "institution") return 100;
-    return 220;
+    if (d.type === "epstein") return 200 + (1 - (d.strength || 0.5)) * 100;
+    if (d.type === "institution") return 80;
+    if (d.type === "interpersonal") return 180;
+    return 250;
   }).strength(d => {
-    if (d.type === "epstein") return 0.6;
-    if (d.type === "institution") return 0.4;
-    return 0.15;
+    if (d.type === "epstein") return 0.5;
+    if (d.type === "institution") return 0.35;
+    return 0.1;
   }))
   .force("charge", d3.forceManyBody()
     .strength(d => {
-      if (d.id === "epstein") return -800;
-      if (d.type === "institution") return -150;
-      return -400;
+      if (d.id === "epstein") return -1200;
+      if (d.type === "institution") return -100;
+      return -350;
     }))
   .force("center", d3.forceCenter(0, 0))
-  .force("collision", d3.forceCollide().radius(d => nodeRadius(d) + 8));
+  .force("collision", d3.forceCollide().radius(d => nodeRadius(d) + 6));
 
 // Draw links
 const link = g.append("g")
@@ -619,7 +895,7 @@ const link = g.append("g")
   .attr("stroke-width", linkWidth)
   .attr("stroke-dasharray", d => d.type === "shared" ? "4,3" : null);
 
-// Edge labels
+// Edge labels (only for Epstein connections)
 const edgeLabels = g.append("g")
   .selectAll("text")
   .data(links.filter(d => d.label && d.type === "epstein"))
@@ -642,19 +918,16 @@ const node = g.append("g")
 // Node circles
 node.append("circle")
   .attr("r", nodeRadius)
-  .attr("fill", d => {
-    const c = nodeColor(d);
-    return d.type === "institution" ? c : c;
-  })
-  .attr("fill-opacity", d => d.type === "institution" ? 0.35 : 0.7)
+  .attr("fill", nodeColor)
+  .attr("fill-opacity", d => d.type === "institution" ? 0.3 : 0.65)
   .attr("stroke", nodeColor)
   .attr("stroke-width", d => d.id === "epstein" ? 2.5 : 1.5)
   .attr("stroke-opacity", 0.8);
 
-// Pulsing ring on Epstein node
+// Pulsing ring on Epstein
 node.filter(d => d.id === "epstein")
   .append("circle")
-  .attr("r", 36)
+  .attr("r", 40)
   .attr("fill", "none")
   .attr("stroke", "#c04040")
   .attr("stroke-width", 1)
@@ -663,23 +936,23 @@ node.filter(d => d.id === "epstein")
 
 // Labels
 node.append("text")
-  .attr("dy", d => nodeRadius(d) + 14)
+  .attr("dy", d => nodeRadius(d) + 13)
   .attr("text-anchor", "middle")
-  .attr("fill", d => d.id === "epstein" ? "#c04040" : d.type === "institution" ? "#555" : "#888")
-  .attr("font-size", d => d.id === "epstein" ? "13px" : d.type === "institution" ? "10px" : "11px")
+  .attr("fill", d => d.id === "epstein" ? "#c04040" : d.type === "institution" ? "#444" : "#777")
+  .attr("font-size", d => d.id === "epstein" ? "13px" : d.type === "institution" ? "9px" : "10px")
   .attr("font-weight", d => d.id === "epstein" ? "700" : d.type === "institution" ? "400" : "500")
   .text(d => d.name);
 
-// Mention count badges for people
+// Mention count badges
 node.filter(d => d.mentions && d.id !== "epstein")
   .append("text")
   .attr("dy", 4)
   .attr("text-anchor", "middle")
   .attr("fill", "#fff")
-  .attr("font-size", "9px")
+  .attr("font-size", "8px")
   .attr("font-weight", "600")
-  .attr("opacity", 0.9)
-  .text(d => d.mentions >= 1000 ? (d.mentions / 1000).toFixed(0) + "K" : d.mentions);
+  .attr("opacity", 0.85)
+  .text(d => d.mentions >= 1000 ? (d.mentions / 1000).toFixed(d.mentions >= 10000 ? 0 : 1) + "K" : d.mentions);
 
 // Epstein label inside node
 node.filter(d => d.id === "epstein")
@@ -687,9 +960,17 @@ node.filter(d => d.id === "epstein")
   .attr("dy", 5)
   .attr("text-anchor", "middle")
   .attr("fill", "#fff")
-  .attr("font-size", "11px")
+  .attr("font-size", "12px")
   .attr("font-weight", "700")
   .text("JE");
+
+// Deceased marker
+node.filter(d => d.deceased)
+  .append("text")
+  .attr("class", "deceased-marker")
+  .attr("dy", -nodeRadius({ mentions: 200 }) - 4)
+  .attr("text-anchor", "middle")
+  .text("(deceased)");
 
 // ─── Interactions ────────────────────────────────────────────────────
 
@@ -702,9 +983,8 @@ node.on("mouseover", function(event, d) {
   tooltip.select(".tt-role").text(d.role || "");
   tooltip.classed("visible", true);
 
-  // Highlight connected
   link.attr("stroke-opacity", l =>
-    (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1
+    (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.07
   );
   node.select("circle")
     .attr("opacity", n => {
@@ -713,16 +993,17 @@ node.on("mouseover", function(event, d) {
         (l.source.id === d.id && l.target.id === n.id) ||
         (l.target.id === d.id && l.source.id === n.id)
       );
-      return connected ? 1 : 0.15;
+      return connected ? 1 : 0.1;
     });
-  node.select("text")
-    .attr("opacity", n => {
+  node.selectAll("text")
+    .attr("opacity", function() {
+      const n = d3.select(this.parentNode).datum();
       if (n.id === d.id) return 1;
       const connected = links.some(l =>
         (l.source.id === d.id && l.target.id === n.id) ||
         (l.target.id === d.id && l.source.id === n.id)
       );
-      return connected ? 1 : 0.15;
+      return connected ? 1 : 0.1;
     });
 })
 .on("mousemove", function(event) {
@@ -748,36 +1029,34 @@ svg.on("click", function() {
 
 function showDetail(d) {
   selectedNode = d;
-  const panel = document.getElementById("detail-panel");
-  document.getElementById("panel-name").textContent = d.name;
+  document.getElementById("panel-name").textContent = d.name + (d.deceased ? " (deceased)" : "");
   document.getElementById("panel-role").textContent = d.role || "";
   document.getElementById("panel-affiliation").textContent = d.affiliation || "N/A";
   document.getElementById("panel-appearance").textContent = d.appearance || "N/A";
   document.getElementById("panel-status").textContent = d.status || "N/A";
 
-  // Build connections list
   const connList = document.getElementById("panel-connections");
   connList.innerHTML = "";
   links.forEach(l => {
     let other = null;
     let label = l.label;
-    if (l.source.id === d.id || (typeof l.source === "string" && l.source === d.id)) {
-      other = typeof l.target === "object" ? l.target : nodes.find(n => n.id === l.target);
-    } else if (l.target.id === d.id || (typeof l.target === "string" && l.target === d.id)) {
-      other = typeof l.source === "object" ? l.source : nodes.find(n => n.id === l.source);
+    if (l.source.id === d.id) {
+      other = l.target;
+    } else if (l.target.id === d.id) {
+      other = l.source;
     }
     if (other && other.type !== "institution") {
       const li = document.createElement("li");
       li.innerHTML = `<span class="conn-name">${other.name}</span><span class="conn-via">${label}</span>`;
       li.onclick = () => {
-        const personData = people.find(p => p.id === other.id);
+        const personData = allPeople.find(p => p.id === other.id) || (other.id === "epstein" ? epstein : null);
         if (personData) showDetail(personData);
       };
       connList.appendChild(li);
     }
   });
 
-  panel.classList.add("open");
+  document.getElementById("detail-panel").classList.add("open");
 }
 
 function closePanel() {
@@ -800,7 +1079,6 @@ simulation.on("tick", () => {
   node.attr("transform", d => `translate(${d.x},${d.y})`);
 });
 
-// Drag handlers
 function dragstarted(event, d) {
   if (!event.active) simulation.alphaTarget(0.3).restart();
   d.fx = d.x;
@@ -818,24 +1096,21 @@ function dragended(event, d) {
   d.fy = null;
 }
 
-// Fade out instructions after 6 seconds
 setTimeout(() => {
-  document.getElementById("instructions").style.opacity = "0";
-  setTimeout(() => {
-    document.getElementById("instructions").style.display = "none";
-  }, 600);
-}, 6000);
+  const el = document.getElementById("instructions");
+  el.style.opacity = "0";
+  setTimeout(() => { el.style.display = "none"; }, 600);
+}, 8000);
 
-// Pulse animation
 function animatePulse() {
   d3.selectAll(".pulse-ring")
     .transition()
     .duration(2000)
-    .attr("r", 44)
+    .attr("r", 48)
     .attr("stroke-opacity", 0)
     .transition()
     .duration(0)
-    .attr("r", 36)
+    .attr("r", 40)
     .attr("stroke-opacity", 0.3)
     .on("end", animatePulse);
 }
